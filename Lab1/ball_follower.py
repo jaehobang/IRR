@@ -78,7 +78,7 @@ def find_ball(inputImage):
   outputImage = cv2.resize(inputImage, (int(320.0 / height * width), 320))
   imageBlur = cv2.GaussianBlur(outputImage, (11,11), 3)
   imageHSV = cv2.cvtColor(imageBlur, cv2.COLOR_BGR2HSV)
-  lowerPink = np.array([145, 50, 75]) #[145, 75, 75]
+  lowerPink = np.array([145, 10, 75]) #[145, 75, 75]
   upperPink = np.array([180, 255, 255])
   maskPink = cv2.inRange(imageHSV, lowerPink, upperPink)
   imageSeg = cv2.bitwise_and(imageHSV, imageHSV, mask=maskPink)
