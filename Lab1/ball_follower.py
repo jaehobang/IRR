@@ -4,6 +4,11 @@
 import cv2
 import numpy as np
 
+try:
+  import rospy
+  from std_msgs.msg import String
+
+
 """Directions:
    1. Successfully run the code on the robot - ROS related
    2. Find specific ball in image 50% or more of the time
@@ -22,6 +27,18 @@ import numpy as np
 
 # I want to test this on laptop before putting it on the robot.
 # find_ball will have a wrapper that deals with ROS communication
+
+def test_simulation():
+  pub = rospy.Publisher('chatter', String, queue_size=10)
+  rospy.init_node('talker', anonymous=True)
+  rate = rospy.Rate(10)  # 10hz
+  while not rospy.is_shutdown():
+    hello_str = "hello world %s" % rospy.get_time()
+    rospy.loginfo(hello_str)
+    pub.publish(hello_str)
+    rate.sleep()
+
+
 
 
 def test_laptop_webcam():
