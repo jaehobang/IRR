@@ -1,28 +1,13 @@
-#! usr/bin/env python
-
-
+#!/usr/bin/env python
+"""
+Code written by Jaeho Bang for Intro to Robotics Research Class Fall 2018
+"""
 import cv2
 import numpy as np
 
 try:
   import rospy
   from std_msgs.msg import String
-
-
-"""Directions:
-   1. Successfully run the code on the robot - ROS related
-   2. Find specific ball in image 50% or more of the time
-   3. Print the location of the ball
-   4. Display the location of the ball on the image - draw a box around it? 
-   After grabbing the image, process the image to look for circles.
-  An easy place to start is to use theHoughCircles() functionality within OpenCV:
-  
-  
-  circles = cv2.HoughCircles(cv_image, cv2.HOUGH_GRADIENT, 1, 90, param1=70, param2=60,minRadius=50, maxRadius=0)
-  
-  Normalizing and slightly blurring the image c
-  
-   """
 
 
 # I want to test this on laptop before putting it on the robot.
@@ -37,9 +22,6 @@ def test_simulation():
     rospy.loginfo(hello_str)
     pub.publish(hello_str)
     rate.sleep()
-
-
-
 
 def test_laptop_webcam():
   cap = cv2.VideoCapture(0)
@@ -60,6 +42,7 @@ def test_laptop_webcam():
       blurImage = packedReturn['blurred']
       gray_3_channel = cv2.cvtColor(grayImage, cv2.COLOR_GRAY2BGR)
       cv2.imshow(window_name, np.vstack((blurImage, newImage, gray_3_channel)))
+      print(ballLocation)
       #cv2.imshow(window_name, segImage)
 
     else:
@@ -71,6 +54,7 @@ def test_laptop_webcam():
 
       resizedImage = cv2.resize(testImage, (int(320.0 / height * width), 320))
       cv2.imshow(window_name, np.vstack((blurImage, resizedImage, gray_3_channel)))
+      print("N/A")
       #cv2.imshow(window_name, segImage)
 
     if cv2.waitKey(5) & 0xFF == ord('q'):
@@ -80,31 +64,23 @@ def test_laptop_webcam():
   cv2.destroyAllWindows()
 
 
-
-
-# this script will simply find the location of the ball, and output the annotated image
-# ball will be pink
 def find_ball(inputImage):
-  """This script should receive images from the webcam on your laptop
-   and track the location of a specific ball in the frame.
-   Once you have made the script it is often useful to make it an executable.
-   To do this you must first make sure you have the type of environment 
-   being used in the first line of your code"""
+
   height, width = inputImage.shape[:2]
 
   outputImage = cv2.resize(inputImage, (int(320.0 / height * width), 320))
   imageBlur = cv2.GaussianBlur(outputImage, (11,11), 3)
   imageHSV = cv2.cvtColor(imageBlur, cv2.COLOR_BGR2HSV)
-  lowerPink = np.array([145, 50, 75]) #[145, 75, 75]
+  lowerPink = np.array([145, 10, 75]) #[145, 75, 75]
   upperPink = np.array([180, 255, 255])
   maskPink = cv2.inRange(imageHSV, lowerPink, upperPink)
   imageSeg = cv2.bitwise_and(imageHSV, imageHSV, mask=maskPink)
   imageSegBRG = cv2.cvtColor(imageSeg, cv2.COLOR_HSV2BGR)
   imageGray = cv2.cvtColor(imageSegBRG, cv2.COLOR_BGR2GRAY)
 
-
-  #HoughCircles(image, method, dp, minDist)
   """
+  HoughCircles(image, method, dp, minDist) documentation
+  
   image - input image in grayscale
   method - method of detecting circles, 
   dp - inverse ratio of the accumulator resolution
@@ -127,7 +103,6 @@ def find_ball(inputImage):
   else:
     return {"location": None, "output": None, "grayscale": imageGray,
             "segmentation": imageSegBRG, "blurred":imageBlur}
-
 
 
 
