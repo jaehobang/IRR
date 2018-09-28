@@ -14,31 +14,25 @@ from geometry_msgs.msg import Twist
 class DriveWheels:
   def __init__(self):
     rospy.init_node('ballFinder', anonymous = True)
-    rospy.Subscriber("/turtlebot3/burger/ball_location", Point, self.callback)
+    rospy.Subscriber("/turtlebot3/burger/ball_range", Point, self.callback)
     self.vel_publisher = rospy.Publisher("/cmd_vel", Twist, queue_size = 1)
-    self.publish_rate = rospy.Rate(10)  # 10hz
+    self.publish_rate = rospy.Rate(1)  # 10hz
 
     self.center_points = []
     self.P = 0.1
+    self.optimal_dist = 1 # 1 meter
 
     rospy.spin()
 
 
   def callback(self, data):
-    center_x = data.z / 2
-    self.center_points.append(data)
+    length_offset = data.x
+    width_offset = data.y
+    angle_offset = data.z
 
-    if len(self.center_points) < 2:
-      previous_point = Point()
-      previous_point.x = data.z / 2
-    else:
-      previous_point = self.center_points[-2]
-    current_point = self.center_points[-1]
-    x_offset = (current_point.x - center_x) #if positive, need to move to right
-    #TODO: Need to debug this step and see if applying to yaw is the correct way to go
-    if x_offset > 50:
+    if angle_offset > 0.5:
       movement_vel = -0.1
-    elif x_offset < -50:
+    elif angle_offset < -0.5:
       movement_vel = 0.1
     else:
       movement_vel = 0
@@ -47,6 +41,13 @@ class DriveWheels:
 
     self.vel_publisher.publish(twist)
     self.publish_rate.sleep()
+
+    twist = Twist()
+    twist.linear.x = 0.1 * (length_offset - self.optimal_dist)
+
+    self.vel_publisher.publish(twist)
+    self.publish_rate.sleep()
+
 
 
 

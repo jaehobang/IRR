@@ -64,7 +64,7 @@ class BallFinder:
       for (x, y, r) in circles:
         cv2.circle(outputImage, (x, y), r, (0, 255, 0), 4)
 
-      return {"location": (x, y, new_width), "output": outputImage, "grayscale": imageGray,
+      return {"location": (x, r, new_width), "output": outputImage, "grayscale": imageGray,
               "segmentation": imageSegBRG, "blurred": imageBlur}
 
     else:
@@ -94,9 +94,9 @@ class BallFinder:
     if result['location'] is not None:
       location = Point()
       #TODO: Need to make sure x = 0, y = 1
-      location.x = result['location'][0]
-      location.y = result['location'][1]
-      location.z = result['location'][2]
+      location.x = result['location'][0] #x
+      location.y = result['location'][1] #r
+      location.z = result['location'][2] #new_width
       self.loc_publisher.publish(location)
     self.publish_rate.sleep()
 
