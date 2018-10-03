@@ -36,7 +36,7 @@ class BallFinder:
 
     outputImage = cv2.resize(inputImage, (int(320.0 / height * width), 320))
     new_height, new_width = outputImage.shape[:2]
-    imageBlur = cv2.GaussianBlur(outputImage, (11, 11), 3)
+    #imageBlur = cv2.GaussianBlur(outputImage, (11, 11), 3)
     imageHSV = cv2.cvtColor(imageBlur, cv2.COLOR_BGR2HSV)
     lowerPink = np.array([145, 10, 75])  # pink:[145, 10, 75], [180, 255, 255]
     upperPink = np.array([180, 255, 255]) # yellow:[20, 100, 100], [30, 255, 255]
@@ -57,7 +57,7 @@ class BallFinder:
     minRadius - minimum size of radius in pixels
     maxRaius - maximum size of radius in pixels
     """
-    circles = cv2.HoughCircles(imageGray, cv2.HOUGH_GRADIENT, 1, 200, param1=70, param2=30, minRadius=30, maxRadius=500)
+    circles = cv2.HoughCircles(imageGray, cv2.HOUGH_GRADIENT, 1, 200, param1=70, param2=20, minRadius=30, maxRadius=500)
 
     if circles is not None:
       circles = np.round(circles[0, :]).astype("int")
