@@ -20,10 +20,8 @@ class BallFinder:
 
     self.debug_mode = debug_mode
     if debug_mode:
-      self.window_name = "image"
-      cv2.namedWindow(self.window_name, cv2.WINDOW_NORMAL)
-      cv2.startWindowThread()
-
+      self.seq = 0
+      self.image_publisher = rospy.Publisher("/turtlebot3/burger/image", CompressedImage, queue_size = 1)
     rospy.spin()
 
     if debug_mode:
@@ -37,7 +35,7 @@ class BallFinder:
     outputImage = cv2.resize(inputImage, (int(320.0 / height * width), 320))
     new_height, new_width = outputImage.shape[:2]
     #imageBlur = cv2.GaussianBlur(outputImage, (11, 11), 3)
-    imageHSV = cv2.cvtColor(imageBlur, cv2.COLOR_BGR2HSV)
+    imageHSV = cv2.cvtColor(outputImage, cv2.COLOR_BGR2HSV)
     lowerPink = np.array([145, 10, 75])  # pink:[145, 10, 75], [180, 255, 255]
     upperPink = np.array([180, 255, 255]) # yellow:[20, 100, 100], [30, 255, 255]
     maskPink = cv2.inRange(imageHSV, lowerPink, upperPink)
@@ -64,12 +62,10 @@ class BallFinder:
       for (x, y, r) in circles:
         cv2.circle(outputImage, (x, y), r, (0, 255, 0), 4)
 
-      return {"location": (x, r, new_width), "output": outputImage, "grayscale": imageGray,
-              "segmentation": imageSegBRG, "blurred": imageBlur}
+      return {"location": (x, r, new_width), "output": outputImage}
 
     else:
-      return {"location": None, "output": None, "grayscale": imageGray,
-              "segmentation": imageSegBRG, "blurred": imageBlur}
+      return {"location": None, "output": outputImage}
 
 
   def callback(self, data):
@@ -104,32 +100,17 @@ class BallFinder:
 
 
   def displayImageStream(self, packedReturn, compressedImage):
+    outputImage = packedReturn['output']
+    image = CompressedImage()
+    image.header.seq = self.seq
+    self.seq += 1
+    image.header.stamp = rospy.Time.now()
+    image.header.frame_id = "blab"
+    image.format = "jpg"
+    image.data = outputImage
 
-    if packedReturn['output'] is not None:
-      ballLocation = packedReturn['location']
-      newImage = packedReturn['output']
-      grayImage = packedReturn['grayscale']
-      segImage = packedReturn['segmentation']
-      blurImage = packedReturn['blurred']
-      gray_3_channel = cv2.cvtColor(grayImage, cv2.COLOR_GRAY2BGR)
-      cv2.imshow(self.window_name, np.vstack((blurImage, newImage, gray_3_channel)))
-      print(ballLocation)
-      # cv2.imshow(window_name, segImage)
-
-    else:
-      grayImage = packedReturn['grayscale']
-      segImage = packedReturn['segmentation']
-      blurImage = packedReturn['blurred']
-      gray_3_channel = cv2.cvtColor(grayImage, cv2.COLOR_GRAY2BGR)
-      height, width = compressedImage.shape[:2]
-
-      resizedImage = cv2.resize(compressedImage, (int(320.0 / height * width), 320))
-      cv2.imshow(self.window_name, np.vstack((blurImage, resizedImage, gray_3_channel)))
-
-      print("N/A")
-      # cv2.imshow(window_name, segImage)
-
-    cv2.waitKey(0)
+    self.image_publisher.publish(image)
+    self.publish_rate.sleep()
 
 
 
