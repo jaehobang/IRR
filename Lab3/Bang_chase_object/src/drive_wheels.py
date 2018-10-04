@@ -30,23 +30,31 @@ class DriveWheels:
     width_offset = data.y
     angle_offset = data.z
 
-    if angle_offset > 0.5:
-      movement_vel = -0.1
-    elif angle_offset < -0.5:
-      movement_vel = 0.1
+    if data.x == 0 and data.y == 0 and data.z == 0:
+      movement_vel = 0.3
+      twist = Twist()
+      twist.angular.z = movement_vel
+      self.vel_publisher.publish(twist)
+      self.publish_rate.sleep()
     else:
-      movement_vel = 0
-    twist = Twist()
-    twist.angular.z = movement_vel
 
-    self.vel_publisher.publish(twist)
-    self.publish_rate.sleep()
+      if angle_offset > 0.5:
+        movement_vel = -0.1
+      elif angle_offset < -0.5:
+        movement_vel = 0.1
+      else:
+        movement_vel = 0
+      twist = Twist()
+      twist.angular.z = movement_vel
 
-    twist = Twist()
-    twist.linear.x = 0.1 * (length_offset - self.optimal_dist)
+      self.vel_publisher.publish(twist)
+      self.publish_rate.sleep()
 
-    self.vel_publisher.publish(twist)
-    self.publish_rate.sleep()
+      twist = Twist()
+      twist.linear.x = 0.1 * (length_offset - self.optimal_dist)
+
+      self.vel_publisher.publish(twist)
+      self.publish_rate.sleep()
 
 
 

@@ -17,11 +17,12 @@ class BallFinder:
     rospy.Subscriber("/raspicam_node/image/compressed", CompressedImage, self.callback)
     self.loc_publisher = rospy.Publisher("/turtlebot3/burger/ball_location", Point, queue_size = 1)
     self.publish_rate = rospy.Rate(10)  # 10hz
+    #self.publish_image_rate = rospy.Rate(1) #1hz
 
     self.debug_mode = debug_mode
     if debug_mode:
       self.seq = 0
-      self.image_publisher = rospy.Publisher("/turtlebot3/burger/image", CompressedImage, queue_size = 1)
+      self.image_publisher = rospy.Publisher("/turtlebot3/burger/image_raw/compressed", CompressedImage, queue_size = 1)
     rospy.spin()
 
     if debug_mode:
@@ -55,7 +56,7 @@ class BallFinder:
     minRadius - minimum size of radius in pixels
     maxRaius - maximum size of radius in pixels
     """
-    circles = cv2.HoughCircles(imageGray, cv2.HOUGH_GRADIENT, 1, 200, param1=70, param2=20, minRadius=30, maxRadius=500)
+    circles = cv2.HoughCircles(imageGray, cv2.HOUGH_GRADIENT, 1, 200, param1=70, param2=25, minRadius=30, maxRadius=500)
 
     if circles is not None:
       circles = np.round(circles[0, :]).astype("int")
@@ -89,7 +90,8 @@ class BallFinder:
 
     if result['location'] is not None:
       location = Point()
-      #TODO: Need to make sure x = 0, y = 1
+      #BIG NOTE: when the robot is facing me... the robot's right is a low pixel value,
+                                              # the robot's left is a high pixel value
       location.x = result['location'][0] #x
       location.y = result['location'][1] #r
       location.z = result['location'][2] #new_width
@@ -106,11 +108,12 @@ class BallFinder:
     self.seq += 1
     image.header.stamp = rospy.Time.now()
     image.header.frame_id = "blab"
-    image.format = "jpg"
-    image.data = outputImage
+    image.format = "jpeg"
+
+    image.data = np.array(cv2.imencode('.jpg', outputImage)[1]).tostring()
 
     self.image_publisher.publish(image)
-    self.publish_rate.sleep()
+    #self.publish_image_rate.sleep()
 
 
 
