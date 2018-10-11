@@ -1,6 +1,0 @@
-<launch>
-  <node name="drive_wheels" pkg="lab2" type="drive_wheels.py" />
-  <node name="find_ball" pkg="lab2" type="find_ball.py" />
-
-
-</launch>
