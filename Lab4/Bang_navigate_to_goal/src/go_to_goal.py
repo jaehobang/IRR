@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # license removed for brevity
+import os
 import rospy
 import cv2
 import sys
@@ -9,7 +10,7 @@ from std_msgs.msg import String
 from sensor_msgs.msg import CompressedImage
 from geometry_msgs.msg import Point
 from sensor_msgs.msg import LaserScan
-
+from nav_msgs.msg import Odometry
 
 
 
@@ -17,7 +18,18 @@ class goToGoal:
 
 
   def __init__(self):
-    pass
+    self.odom_subscriber = rospy.Subscriber("/odom", Odometry, self.update_odometry, queue_size = 1)
+    self.parse_txt()
+
+
+
+  def parse_txt(self):
+    current_path = os.path.dirname(os.path.abspath(__file__))
+    input_file = os.path.join(current_path, "wayPoints.txt")
+    text_file = open(input_file, "r")
+
+
+
 
   def update_odometry(self, Odom):
     position = Odom.pose.pose.position

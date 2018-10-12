@@ -14,29 +14,9 @@ from sensor_msgs.msg import LaserScan
 class getObjectRange:
     def __init__(self, debug_mode):
         rospy.init_node('getObjectRange', anonymous=True, log_level=rospy.DEBUG)
-        rospy.Subscriber("/turtlebot3/burger/ball_location", Point, self.callback_image, queue_size = 1)
         rospy.Subscriber("/scan", LaserScan, self.callback_laser, queue_size = 1)
 
         # TODO: Figure out the angle with some math formulation
-        self.actual_ball_radius = 0.12 #Everything needs to be in meters
-        self.assumed_ball_range = [0.3, 1.2] #Give a bound of angles for rigor
-
-        self.calculated_angle_range = []
-        self.calculated_ball_offset = -1
-
-        self.loc_publisher = rospy.Publisher("/turtlebot3/burger/ball_range", Point, queue_size=1)
-        self.publish_rate = rospy.Rate(10)  # 10hz
-        self.image_stamp = 0
-
-        self.debug_mode = debug_mode
-        if debug_mode:
-            self.window_name = "image"
-            cv2.namedWindow(self.window_name, cv2.WINDOW_NORMAL)
-            cv2.startWindowThread()
-
-        rospy.spin()
-        if debug_mode:
-            cv2.destroyAllWindows()
 
     #pixel_offset refers to distance of object from the center of image in terms of pixels
     #pixel radius refers to radius of object in the image in terms of pixels
@@ -64,63 +44,30 @@ class getObjectRange:
         return [start_index, end_index]
 
     def callback_laser(self, data):
-        if self.calculated_angle_range == []:
-            return
+        print len(data.ranges)
+        print type(data.ranges)
+        '''
+        index_ranges = self.convertRad2Index(len(data.ranges),
+                                            data.angle_min, data.angle_max, data.angle_increment)
 
-        rospy.loginfo("current time:" + str(rospy.Time.now().to_time()))
-        rospy.loginfo("image stamp time:" + str(self.image_stamp.to_time()))
-        if rospy.Time.now() - self.image_stamp > rospy.Duration(1):
-            pub_point = Point()
-            pub_point.x = 0
-            pub_point.y = 0
-            pub_point.z = 0
+        #rospy.loginfo("index ranges are " + str(index_ranges))
 
-        else:
-            print len(data.ranges)
-            print type(data.ranges)
+        minimum_dist = np.array(data.ranges[index_ranges[0]:index_ranges[1]])
+        minimum_dist[minimum_dist < data.range_min] = math.inf
 
-            index_ranges = self.convertRad2Index(len(data.ranges),
-                                                data.angle_min, data.angle_max, data.angle_increment)
+        ball_dist = min(minimum_dist)
 
-            #rospy.loginfo("index ranges are " + str(index_ranges))
-
-            minimum_dist = np.array(data.ranges[index_ranges[0]:index_ranges[1]])
-            minimum_dist[minimum_dist < data.range_min] = math.inf
-
-            ball_dist = min(minimum_dist)
-
-            pub_point = Point()
-            pub_point.x = ball_dist
-            pub_point.y = self.calculated_ball_offset
-            pub_point.z = math.atan2(pub_point.y, pub_point.x) #calculated in radians
+        pub_point = Point()
+        pub_point.x = ball_dist
+        pub_point.y = self.calculated_ball_offset
+        pub_point.z = math.atan2(pub_point.y, pub_point.x) #calculated in radians
 
         rospy.loginfo("x,y,z: " + str(pub_point.x) + "," + str(pub_point.y) + "," + str(pub_point.z))
         self.loc_publisher.publish(pub_point)
         self.publish_rate.sleep()
+        '''
 
 
-    def callback_image(self, data):
-        # Retrieve the image, find the location, publish that
-        # rospy.logerr(type(data.format))
-        # rospy.logerr(data.format)
-        # rospy.logerr(type(data.data))
-        # rospy.logerr(data.data)
-        # tmp = []
-        # assert(type(compressedImage) == type(tmp))
-        # assert(type(compressedImage) == type("hello world"))
-        #Sean's code bogus numbers
-        if data.x == 999:
-            return
-
-        image_width = data.z
-        center_x = image_width / 2
-
-        current_point = data.x
-        current_radius = data.y
-
-        x_offset = (current_point - center_x)  # if positive, need to move to right
-        self.image_stamp = rospy.Time.now()
-        self.calculate_angle_range(x_offset, current_radius)
 
 if __name__ == '__main__':
   args = sys.argv

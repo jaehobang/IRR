@@ -13,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   sensor_msgs
   std_msgs
   roslaunch
+  nav_msgs
 )
 
 roslaunch_add_file_check(launch)
