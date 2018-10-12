@@ -1,0 +1,7 @@
+<launch>
+  <include file="$(find turtlebot3_bringup)/launch/turtlebot3_robot.launch"/>
+  <include file="$(find raspicam_node)/launch/mine.launch"/>
+  <node name="drive_wheels" pkg="Bang_chase_object" type="drive_wheels.py" />
+  <node name="find_ball" pkg="Bang_chase_object" type="detectObjectUpdated.py" />
+  <node name="get_object_range" pkg="Bang_chase_object" type="get_object_range.py" />
+</launch>
