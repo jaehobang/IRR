@@ -19,7 +19,12 @@ class goToGoal:
 
   def __init__(self):
     self.odom_subscriber = rospy.Subscriber("/odom", Odometry, self.update_odometry, queue_size = 1)
+    self.way_points = []
     self.parse_txt()
+    self.waypoint_counter = 0 #We will iterate through the way_points list with this counter
+
+
+
 
 
 
@@ -27,8 +32,14 @@ class goToGoal:
     current_path = os.path.dirname(os.path.abspath(__file__))
     input_file = os.path.join(current_path, "wayPoints.txt")
     text_file = open(input_file, "r")
-
-
+    lines = text_file.readlines()
+    for line in lines:
+      line = line.strip() #no more \n
+      sentence_list = line.split(" ")
+      if sentence_list[0] == "#" or sentence_list[0] == "":
+        continue
+      assert len(sentence_list) == 2
+      self.way_points.append( (float(sentence_list[0]), float(sentence_list[1])) )
 
 
   def update_odometry(self, Odom):
@@ -38,6 +49,9 @@ class goToGoal:
     # To get the angular position along the z-axis, the following equation is required.
     q = Odom.pose.pose.orientation
     orientation = np.arctan2(2 * (q.w * q.z + q.x * q.y), 1 - 2 * (q.y * q.y + q.z * q.z))
+
+    #frame_id of /odom = odom
+    #child_frame_id of /odom = base_footprint
 
     if self.Init:
       # The initial data is stored to by subtracted to all the other values as we want to start at position (0,0) and orientation 0
