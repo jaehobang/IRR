@@ -109,13 +109,17 @@ class goToGoal:
       self.way_points.append( map(float, sentence_list) )
 
   def update_goal(self, data):
+    self.current_waypoint += 1
     rospy.loginfo(str(self.current_waypoint) + "," + str(len(self.way_points)))
+
+    assert (self.current_waypoint < len(self.way_points))
+
     if self.current_waypoint == len(self.way_points):
 
       rospy.signal_shutdown("All waypoints reached... initiating shutdown...")
 
-    assert(self.current_waypoint < len(self.way_points))
-    self.current_waypoint += 1
+
+
     #Need to rest for two seconds in between reaching the waypoints
     rospy.loginfo("Message received from robot: " + data.status.text)
 
