@@ -1,0 +1,13 @@
+<launch>
+
+  <include file="$(find turtlebot3_navigation)/launch/turtlebot3_navigation.launch">
+    <arg map_file="$HOME/map.yaml">
+  </include>
+  
+  <node name="go_to_goal" pkg="Bang_navigate_to_goal" type="go_to_goal.py" />
+</launch>
+
+
+
+<!-- We will use SLAM and move_base for this project;
+     The only thing I will implement is obstacle avoidance mechanism -->
