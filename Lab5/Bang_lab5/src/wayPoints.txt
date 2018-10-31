@@ -1,0 +1,11 @@
+# This line will be ignored every line that starts with hash is comment
+# By Jaeho Bang
+# Every empty line will be ignored
+# Delimiter is space
+# The distance is meters
+# goToGoal node will read in this file to determine the waypoints
+
+1.4 0.0
+2.0 0.75
+1.4 1.5
+0.0 1.5
