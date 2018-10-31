@@ -2,6 +2,7 @@
 # license removed for brevity
 import os
 import rospy
+import tf
 from geometry_msgs.msg import PoseWithCovarianceStamped, PoseStamped
 from move_base_msgs.msg import MoveBaseActionResult
 
@@ -18,6 +19,8 @@ class goToGoal:
     self.publish_rate = rospy.Rate(10)
     self.rest_rate = rospy.Rate(0.5) # Wait for 2 seconds when you reach the goal
 
+    #self.amcl_subscriber = rospy.Subscriber("/amcl_pose", PoseWithCovarianceStamped, queue_size = 1)
+
 
     self.init_scheme()
 
@@ -26,6 +29,8 @@ class goToGoal:
     rospy.spin()
 
   def init_pos(self):
+
+
     initial_pos = PoseWithCovarianceStamped()
     initial_pos.header.frame_id = "map"
     initial_pos.header.seq = 0
@@ -34,12 +39,16 @@ class goToGoal:
     initial_pos.pose.pose.position.x = 0
     initial_pos.pose.pose.position.y = 0
     initial_pos.pose.pose.position.z = 0
-    initial_pos.pose.pose.orientation.x = 0
-    initial_pos.pose.pose.orientation.y = 0
-    initial_pos.pose.pose.orientation.z = 0
-    initial_pos.pose.pose.orientation.w = 0
+    roll = 0
+    pitch = 0
+    yaw = 0
+    quaternion = tf.transformations.quaternion_from_euler(roll, pitch, yaw)
+    initial_pos.pose.pose.orientation.x = quaternion[0]
+    initial_pos.pose.pose.orientation.y = quaternion[1]
+    initial_pos.pose.pose.orientation.z = quaternion[2]
+    initial_pos.pose.pose.orientation.w = quaternion[3]
 
-    initial_pos.covariance = [0.25, 0, 0, 0, 0, 0,
+    initial_pos.pose.covariance = [0.25, 0, 0, 0, 0, 0,
                                0, 0.25, 0, 0, 0, 0,
                                0,    0, 0, 0, 0, 0,
                                0,    0, 0, 0, 0, 0,
@@ -63,6 +72,8 @@ class goToGoal:
     goal.pose.orientation.y = curr_waypoint[4]
     goal.pose.orientation.z = curr_waypoint[5]
     goal.pose.orientation.w = curr_waypoint[6]
+
+    rospy.loginfo("Inside send_goal, " + str(goal))
 
     self.goal_publisher.publish(goal)
     return
@@ -91,17 +102,24 @@ class goToGoal:
     lines = text_file.readlines()
     for line in lines:
       line = line.strip() #no more \n
-      sentence_list = line.split(" ")
+      sentence_list = line.split(", ")
       if sentence_list[0] == "#" or sentence_list[0] == "":
         continue
       assert len(sentence_list) == 7
       self.way_points.append( map(float, sentence_list) )
 
-  def update_goal(self):
-    if self.current_waypoint == len(self.way_points):
-        exit()
+  def update_goal(self, data):
     self.current_waypoint += 1
+    rospy.loginfo(str(self.current_waypoint) + "," + str(len(self.way_points)))
+    if self.current_waypoint == len(self.way_points):
+
+      rospy.signal_shutdown("All waypoints reached... initiating shutdown...")
+
+
+
     #Need to rest for two seconds in between reaching the waypoints
+    rospy.loginfo("Message received from robot: " + data.status.text)
+
     self.rest_rate.sleep()
     self.send_goal()
 
