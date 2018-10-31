@@ -1,0 +1,35 @@
+To enable the Turtlebot3 Gazebo model to simulate a camera, a few files must be changed. If you wreck your Turtlebot3 files or the Gazebo files associated with them, repull to fix the error.
+
+This should all be done on your computer as it is only meant for the simulator!
+
+Altering the turtlebot3 Gazebo model:
+
+Copy all the files in the gazeboModel directory you downloaded.
+Paste them into the directory: ~/catkin_ws/src/turtlebot3/turtlebot3_description/urdf
+
+Adding a model of the maze from the lab to your gazebo environment:
+
+Copy all of the folders and maze.world in the mazeFiles directory you downloaded.
+Paste them into the directory: ~/catkin_ws/src/turtlebot3_simulations/turtlebot3_gazebo/models
+
+Copy turtlebot_maze.launch file in the mazeFiles directory you downloaded.
+Paste it into the directory: ~/catkin_ws/src/turtlebot3_simulations/turtlebot3_gazebo/launch
+
+After this return to the directory: ~/catkin_ws
+Do a catkin_make
+
+You should now be all set to run the simulation environment containing a turtlebot with a simulated rpi_camera.
+
+To launch everything first run,
+
+roscore
+
+****Make sure your ~/.bashrc file is updated to consider your computer the rosmaster and host.
+
+then,
+
+roslaunch turtlebot3_gazebo turtlebot3_maze.launch
+
+****Gazebo should launch with a maze environment similar to lab 5 with the turtlebot inside.
+
+You're all set! You can run teleop to move the robot around and access the camera view using rqt_image_view.
