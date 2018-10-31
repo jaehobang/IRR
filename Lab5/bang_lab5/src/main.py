@@ -111,9 +111,6 @@ class goToGoal:
   def update_goal(self, data):
     self.current_waypoint += 1
     rospy.loginfo(str(self.current_waypoint) + "," + str(len(self.way_points)))
-
-    assert (self.current_waypoint < len(self.way_points))
-
     if self.current_waypoint == len(self.way_points):
 
       rospy.signal_shutdown("All waypoints reached... initiating shutdown...")
