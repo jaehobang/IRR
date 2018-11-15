@@ -1,0 +1,8 @@
+<launch>
+  <include file="$(find turtlebot3_navigation)/launch/turtlebot3_navigation.launch">
+    <arg name="map_file" value="$(find bang_lab5)/maps/gazebo_map.yaml"/>
+  </include>
+
+  <!-- <node name="main" pkg="bang_lab5" type="main.py" /> -->
+
+</launch>
