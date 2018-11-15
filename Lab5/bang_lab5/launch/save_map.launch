@@ -1,0 +1,12 @@
+<launch>
+
+<!-- Commands you need to run for saving the map
+roslaunch turtlebot3_bringup turtlebot3_robot.launch
+roslaunch turtlebot3_slam turtlebot3_slam.launch slam_methods:=gmapping
+roslaunch turtlebot3_teleop turtlebot3_teleop_key.launch
+rosrun map_server map_saver -f ~/catkin_ws/src/Bang_lab5/maps
+-->
+
+  <!-- <node name="main" pkg="bang_lab5" type="main.py" /> -->
+
+</launch>
