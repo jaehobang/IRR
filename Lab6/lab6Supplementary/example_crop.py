@@ -3,11 +3,7 @@
 import cv2
 import csv
 import numpy as np
-from sklearn.neural_network import MLPClassifier
-from sklearn.decomposition import PCA
-from keras.utils import to_categorical
-from keras.models import Sequential
-from keras.layers import Dense, Conv2D, Flatten
+
 
 
 
