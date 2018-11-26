@@ -153,3 +153,4 @@ if __name__ == "__main__":
         os.mkdir("imgs_mod")
     preprocess = Preprocess()
     preprocess.detect_box('./imgs/test.txt')
+    preprocess.detect_box('./imgs/train.txt')
