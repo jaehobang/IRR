@@ -149,7 +149,7 @@ class Preprocess:
 
 
 if __name__ == "__main__":
-    if not os.path.isdir("./img_mod"):
-        os.mkdir("img_mod")
+    if not os.path.isdir("./imgs_mod"):
+        os.mkdir("imgs_mod")
     preprocess = Preprocess()
     preprocess.detect_box('./imgs/test.txt')
