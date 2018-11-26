@@ -24,7 +24,6 @@ class Preprocess:
         self.img = None
         self.x = 50
         self.y = 50
-        self.detect_box()
 
     def sort_contours(self, cnts, method="left-to-right"):
         # initialize the reverse flag and sort index
@@ -50,9 +49,9 @@ class Preprocess:
         return (cnts, boundingBoxes)
 
 
-    def detect_box(self):
+    def detect_box(self, dir):
 
-        with open('./imgs/test .txt', 'rb') as f:
+        with open(dir, 'rb') as f:
             reader = csv.reader(f)
             lines = list(reader)
         for i in range(len(lines)):  # len(lines)
@@ -154,3 +153,4 @@ class Preprocess:
 
 if __name__ == "__main__":
     preprocess = Preprocess()
+    preprocess.detect_box('./imgs/test.txt')
