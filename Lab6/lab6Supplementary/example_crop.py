@@ -3,6 +3,7 @@
 import cv2
 import csv
 import numpy as np
+import os
 
 
 
@@ -148,5 +149,7 @@ class Preprocess:
 
 
 if __name__ == "__main__":
+    if not os.path.isdir("./img_mod"):
+        os.mkdir("img_mod")
     preprocess = Preprocess()
     preprocess.detect_box('./imgs/test.txt')
