@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 # ROS
-from image_classifier.srv import Classify
+from bang_lab6.srv import Classify
 import numpy as np
 import rospy
 import rospkg
