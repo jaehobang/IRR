@@ -3,6 +3,7 @@
 import rospy
 import signal
 import numpy as np
+import random
 
 from geometry_msgs.msg import PoseWithCovarianceStamped, PoseStamped
 from move_base_msgs.msg import MoveBaseActionResult
@@ -43,6 +44,7 @@ class goToGoal:
         #self.initial_publisher = rospy.Publisher("/initialpose", PoseWithCovarianceStamped, queue_size=1)
         self.goal_publisher = rospy.Publisher("/move_base_simple/goal", PoseStamped, queue_size=1)
         self.classification_publisher = rospy.Publisher("/turtlebot3/request_classification", String, queue_size = 1)
+        self.vel_publisher = rospy.Publisher("/cmd_vel", Twist, queue_size=1)
 
         self.result_subscriber = rospy.Subscriber("/move_base/result", MoveBaseActionResult, self.update_goal, queue_size=1)
         self.scan_subscriber = rospy.Subscriber("/scan", LaserScan, self.callback_laser, queue_size=1)
@@ -51,9 +53,9 @@ class goToGoal:
         self.publish_rate = rospy.Rate(10)
 
         # variables
-        self.grid_size = 1
+        self.grid_size = 1.0
         self.grid_center = self.grid_size / 2
-        self.dist_to_image = 0.4
+        self.dist_to_image = 0.35
         self.dist_to_wall_front = -1
         self.dist_to_wall_left = -1
         self.dist_to_wall_right = -1
@@ -63,7 +65,7 @@ class goToGoal:
         self.global_seq = 0
         self.wait = True #waiting for a reply from action
         self.command = None #classification result from imagenode
-        self.direction = [0, 1.57, 3.14, -1.57]
+        self.direction = [0, 1.57, 3.14, 4.71]
         self.d_name = ['up', 'left', 'down', 'right']
 
         rospy.on_shutdown(self.stop_wheels)
@@ -72,6 +74,12 @@ class goToGoal:
         self.run_loop()
 
         rospy.spin()
+
+    def stop_wheels(self):
+        twist = Twist()
+        self.vel_publisher.publish(twist)
+        self.publish_rate.sleep()
+
 
     def run_loop(self):
         self.current_pose = rospy.wait_for_message("/initialpose", PoseWithCovarianceStamped)
@@ -94,14 +102,15 @@ class goToGoal:
             self.wait_for_action_finish()
 
     def turn(self, dir):
+	rospy.loginfo("Inside function turn")
         x = self.current_pose.pose.pose.position.x
         y = self.current_pose.pose.pose.position.y
-        _,_,theta = euler_from_quaternion(self.current_pose.pose.pose.orientation.x,
+        _,_,theta = euler_from_quaternion([self.current_pose.pose.pose.orientation.x,
                                           self.current_pose.pose.pose.orientation.y,
                                           self.current_pose.pose.pose.orientation.z,
-                                          self.current_pose.pose.pose.orientation.w)
+                                          self.current_pose.pose.pose.orientation.w])
         curr_heading = self._determine_direction(theta)
-
+	theta_copy = theta #only used for debugging purposes
         if dir == "left":
             theta += 1.57
         elif dir == "right":
@@ -109,6 +118,7 @@ class goToGoal:
         elif dir == "flip":
             theta += 3.14
 
+	
 
         if curr_heading == "left":
             y -= self.grid_center - self.dist_to_image
@@ -119,10 +129,13 @@ class goToGoal:
         elif curr_heading == "right":
             y += self.grid_center - self.dist_to_image
 
+	rospy.loginfo("offset to dist movement for turning is" + 
+			str(self.grid_center - self.dist_to_image))
+
         new_objective_ = PoseStamped()
         new_objective_.header.seq = self.global_seq
         new_objective_.header.stamp = rospy.Time.now()
-        new_objective_.header.frame_id = "base_footprint"  # not sure if this matters
+        new_objective_.header.frame_id = "map"  # not sure if this matters
 
 
         tx, ty, tz, tw = quaternion_from_euler(0, 0, theta)
@@ -133,6 +146,21 @@ class goToGoal:
         new_objective_.pose.orientation.z = tz
         new_objective_.pose.orientation.w = tw
 
+	rospy.loginfo("Robot is currently facing " + curr_heading)
+	rospy.loginfo("Current position is %f %f %f" % (self.current_pose.pose.pose.position.x,
+							self.current_pose.pose.pose.position.y,
+							theta_copy))
+	rospy.loginfo("Objtive position is %f %f %f" % (new_objective_.pose.position.x,
+							new_objective_.pose.position.y,
+							theta))
+
+
+	self.current_pose.pose.pose.position.x = x
+	self.current_pose.pose.pose.position.y = y
+	self.current_pose.pose.pose.orientation.x = tx
+	self.current_pose.pose.pose.orientation.y = ty
+	self.current_pose.pose.pose.orientation.z = tz
+	self.current_pose.pose.pose.orientation.w = tw
 
         self.goal_publisher.publish(new_objective_)
         self.publish_rate.sleep()
@@ -156,13 +184,27 @@ class goToGoal:
         new_objective_ = PoseStamped()
         new_objective_.header.seq = self.global_seq
         new_objective_.header.stamp = rospy.Time.now()
-        new_objective_.header.frame_id = "base_footprint"  # not sure if this matters
+        new_objective_.header.frame_id = "map"  # not sure if this matters
         new_objective_.pose.position.x = self.current_pose.pose.pose.position.x
         new_objective_.pose.position.y = self.current_pose.pose.pose.position.y
-        new_objective_.pose.orientation.x = self.current_pose.pose.pose.orientation.x
-        new_objective_.pose.orientation.y = self.current_pose.pose.pose.orientation.y
-        new_objective_.pose.orientation.z = self.current_pose.pose.pose.orientation.z
-        new_objective_.pose.orientation.w = self.current_pose.pose.pose.orientation.w
+
+	d = [(0, 0, 0, 1), (0, 0, 0.707, 0.707), (0, 0, 1, 0), (0, 0, -0.707, 0.707)]
+	d_name = ['up', 'left', 'down', 'right']
+	rand_num = random.randint(0,4)
+	new_ori = d[rand_num]
+	rospy.loginfo("Inside wiggle trying " + d_name[rand_num])
+	
+
+        new_objective_.pose.orientation.x = new_ori[0]
+        new_objective_.pose.orientation.y = new_ori[1]
+        new_objective_.pose.orientation.z = new_ori[2]
+        new_objective_.pose.orientation.w = new_ori[3]
+
+
+	self.current_pose.pose.pose.orientation.x = new_ori[0]
+	self.current_pose.pose.pose.orientation.y = new_ori[1]
+	self.current_pose.pose.pose.orientation.z = new_ori[2]
+	self.current_pose.pose.pose.orientation.w = new_ori[3]
 
         self.global_seq += 1
         self.goal_publisher.publish(new_objective_)
@@ -188,7 +230,7 @@ class goToGoal:
 
         num = eval(data.data)
         labels = ["no_sign", "move_left", "move_right", "stop", "stop", "goal"]
-        self.command = labels[num]
+        self.command = labels[int(num)]
 
 
     def request_classification(self):
@@ -197,7 +239,9 @@ class goToGoal:
 
 
     def update_goal(self, data):
-        if data.status.status == MoveBaseActionResult.status.SUCCEEDED:
+	SUCCEEDED = 3
+        rospy.loginfo(str(data.status.status))
+        if data.status.status == SUCCEEDED:
             self.wait = False
 
     def wait_for_action_finish(self):
@@ -209,12 +253,13 @@ class goToGoal:
         This function should be only called when you are trying to move forward
         """
         x = self.current_pose.pose.pose.position.x
-        y = self.current_pose.pose.pose.position.x
-        _,_, theta = euler_from_quaternion(self.current_pose.pose.pose.orientation.x,
+        y = self.current_pose.pose.pose.position.y
+        _,_, theta = euler_from_quaternion([self.current_pose.pose.pose.orientation.x,
                                            self.current_pose.pose.pose.orientation.y,
                                            self.current_pose.pose.pose.orientation.z,
-                                           self.current_pose.pose.pose.orientation.w)
+                                           self.current_pose.pose.pose.orientation.w])
         dir = self._determine_direction(theta)
+	rospy.loginfo("Inside move to wall front , current heading is " + dir)
         if dir == 'up':
             new_objective = (x + self.dist_to_wall_front - self.dist_to_image,
                              y)
@@ -235,13 +280,22 @@ class goToGoal:
         new_objective_ = PoseStamped()
         new_objective_.header.seq = self.global_seq
         new_objective_.header.stamp = rospy.Time.now()
-        new_objective_.header.frame_id = "base_footprint" #not sure if this matters
+        new_objective_.header.frame_id = "map" #not sure if this matters
         new_objective_.pose.position.x = new_objective[0]
         new_objective_.pose.position.y = new_objective[1]
         new_objective_.pose.orientation.x = tx
         new_objective_.pose.orientation.y = ty
         new_objective_.pose.orientation.z = tz
         new_objective_.pose.orientation.w = tw
+
+	rospy.loginfo("Robot is currently facing " + dir)
+	rospy.loginfo("Current position is %f %f %f" % (self.current_pose.pose.pose.position.x,
+							self.current_pose.pose.pose.position.y,
+							theta))
+	rospy.loginfo("Objtive position is %f %f %f" % (new_objective_.pose.position.x,
+							new_objective_.pose.position.y,
+							theta))
+
 
         self.global_seq += 1
         self.current_pose.pose.pose.position.x = new_objective_.pose.position.x
@@ -261,12 +315,15 @@ class goToGoal:
         :param theta: in radians (yaw)
         :return: 'up', 'left', 'right', 'down' where up refers to x+ and left refers to y+
         """
+
+	theta = theta % 6.28
         error = 0.15 #+- 30 degrees
         for i in xrange(len(self.direction)):
             if theta > self.direction[i] - error and theta < self.direction[i] + error:
                 return self.d_name[i]
 
-
+	rospy.loginfo("Inside _determine_direction we should never reach here...")
+	rospy.loginfo("theta value is " + str(theta))
 
 
 
