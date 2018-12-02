@@ -1,5 +1,5 @@
 <launch>
-  <include file="$(find turtlebot3_gazebo)/launch/turtlebot3_maze.launch"/>
+  <include file="$(find turtlebot3_gazebo)/launch/turtlebot3_stadium.launch"/>
   <!-- <node name="imageNode" pkg="bang_lab6" type="image_node.py" />
   <node name="main" pkg="bang_lab6" type="main.py" /> -->
 </launch>

@@ -1,4 +1,4 @@
-image: /home/jaeho-linux/gazebo_map.pgm
+image: /home/jaehogoestotaen/catkin_ws/src/bang_lab6/maps/stadium_gazebo.pgm
 resolution: 0.050000
 origin: [-10.000000, -10.000000, 0.000000]
 negate: 0
