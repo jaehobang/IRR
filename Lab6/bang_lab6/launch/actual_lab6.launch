@@ -1,0 +1,14 @@
+<launch>
+  <!--
+  Need Bombur
+  change bang_image_node.py compressed/compressed to compressed
+  change main_loop distance to wall
+  [PC] roscore
+  [T] roslaunch turtlebot3_bringup turtlebot3_robot.launch
+  [T] roslaunch raspicam_node camera_v2_______2fps.launch
+  rosrun bang_lab6 bang_image_node.py
+  rosrun bang_lab6 main_loop.py
+  roslaunch turtlebot3_navigation turtlebot3_navigation.launch map_file:=/home/jaehogoestotaen/fall2018/catkin_ws/src/bang_lab6/maps/stadium_real.yaml
+
+   -->
+</launch>

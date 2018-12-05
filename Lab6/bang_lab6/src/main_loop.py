@@ -53,9 +53,9 @@ class goToGoal:
         self.publish_rate = rospy.Rate(10)
 
         # variables
-        self.grid_size = 1.0
-        self.grid_center = self.grid_size / 2
-        self.dist_to_image = 0.35
+        #self.grid_size = 1.0
+        #self.grid_center = self.grid_size / 2
+        self.dist_to_image = 0.25
         self.dist_to_wall_front = -1
         self.dist_to_wall_left = -1
         self.dist_to_wall_right = -1
@@ -119,7 +119,7 @@ class goToGoal:
             theta += 3.14
 
 	
-
+	"""
         if curr_heading == "left":
             y -= self.grid_center - self.dist_to_image
         elif curr_heading == "up":
@@ -131,7 +131,7 @@ class goToGoal:
 
 	rospy.loginfo("offset to dist movement for turning is" + 
 			str(self.grid_center - self.dist_to_image))
-
+	"""
         new_objective_ = PoseStamped()
         new_objective_.header.seq = self.global_seq
         new_objective_.header.stamp = rospy.Time.now()
@@ -190,7 +190,7 @@ class goToGoal:
 
 	d = [(0, 0, 0, 1), (0, 0, 0.707, 0.707), (0, 0, 1, 0), (0, 0, -0.707, 0.707)]
 	d_name = ['up', 'left', 'down', 'right']
-	rand_num = random.randint(0,4)
+	rand_num = random.randint(0,3)
 	new_ori = d[rand_num]
 	rospy.loginfo("Inside wiggle trying " + d_name[rand_num])
 	
@@ -229,8 +229,16 @@ class goToGoal:
         rospy.loginfo("classification result is" + data.data)
 
         num = eval(data.data)
-        labels = ["no_sign", "move_left", "move_right", "stop", "stop", "goal"]
-        self.command = labels[int(num)]
+	if num == -1:
+		self.wiggle()
+		self.wait_for_action_finish()
+		self.move_to_wall_front()
+                self.wait_for_action_finish()
+                self.request_classification()
+
+	else:
+        	labels = ["no_sign", "move_left", "move_right", "stop", "stop", "goal"]
+        	self.command = labels[int(num)]
 
 
     def request_classification(self):
@@ -315,12 +323,17 @@ class goToGoal:
         :param theta: in radians (yaw)
         :return: 'up', 'left', 'right', 'down' where up refers to x+ and left refers to y+
         """
-
+	print("original theta is " + str(theta))
+	#offset = 0.4
+	#theta = theta + offset
 	theta = theta % 6.28
-        error = 0.15 #+- 30 degrees
+	print("after accomodation is " + str(theta))
+        error = 0.25 #+- 30 degrees
         for i in xrange(len(self.direction)):
             if theta > self.direction[i] - error and theta < self.direction[i] + error:
                 return self.d_name[i]
+	if theta > 6.28 - error:
+		return "up"
 
 	rospy.loginfo("Inside _determine_direction we should never reach here...")
 	rospy.loginfo("theta value is " + str(theta))
